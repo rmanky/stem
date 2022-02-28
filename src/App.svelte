@@ -1,6 +1,20 @@
 <script lang="ts">
-  import logo from './assets/svelte.png'
-  import Counter from './lib/Counter.svelte'
+  import { onMount } from "svelte";
+  import logo from "./assets/svelte.png";
+  import Counter from "./lib/Counter.svelte";
+
+  onMount(async () => {
+    // GET data from api
+    const data = await fetch("/api", {
+      method: "GET",
+      headers: {
+        // text
+        "Content-Type": "text/plain",
+      },
+    });
+    const text = await data.text();
+    console.log(text);
+  });
 </script>
 
 <main>
@@ -22,8 +36,8 @@
 
 <style>
   :root {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   }
 
   main {
