@@ -1,37 +1,126 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import logo from "./assets/svelte.png";
-  import Counter from "./lib/Counter.svelte";
 
-  onMount(async () => {
-    // GET data from api
-    const data = await fetch("/api", {
-      method: "GET",
-      headers: {
-        // text
-        "Content-Type": "text/plain",
-      },
-    });
-    const text = await data.text();
-    console.log(text);
+  import accompaniment from "./assets/accompaniment.wav";
+  import vocals from "./assets/vocals.wav";
+
+  let to;
+
+  let loaded = "NEW";
+
+  onMount(() => {
+    loaded = "MOUNTED";
   });
+
+  const acc = {
+    aud: null,
+    duration: 0,
+    currentTime: 0,
+    gain: null,
+  };
+
+  const voc = {
+    aud: null,
+    duration: 0,
+    currentTime: 0,
+    gain: null,
+  };
+
+  const load = () => {
+    to = new globalThis.TIMINGSRC.TimingObject({ range: [0, 100] });
+    const audioContext = new AudioContext();
+    const accSource = audioContext.createMediaElementSource(acc.aud);
+    acc.gain = audioContext.createGain();
+    const vocSource = audioContext.createMediaElementSource(voc.aud);
+    voc.gain = audioContext.createGain();
+
+    const dest = audioContext.destination;
+
+    accSource.connect(acc.gain).connect(dest);
+    vocSource.connect(voc.gain).connect(dest);
+
+    console.log("Fully Connected");
+
+    globalThis.MCorp.mediaSync(acc.aud, to);
+    globalThis.MCorp.mediaSync(voc.aud, to);
+    loaded = "LOADED";
+  };
+
+  const play = () => {
+    var v = to.query();
+    if (v.position === 100 && v.velocity === 0) {
+      to.update({ position: 0.0, velocity: 1.0 });
+    } else to.update({ velocity: 1.0 });
+  };
+
+  const pause = () => {
+    to.update({ velocity: 0.0 });
+  };
+
+  const restart = () => {
+    to.update({ position: 0.0 });
+  };
 </script>
 
 <main>
-  <img src={logo} alt="Svelte Logo" />
-  <h1>Hello Typescript!</h1>
+  <audio
+    hidden
+    src={accompaniment}
+    bind:this={acc.aud}
+    bind:duration={acc.duration}
+    bind:currentTime={acc.currentTime}
+  />
 
-  <Counter />
+  <audio
+    hidden
+    src={vocals}
+    bind:this={voc.aud}
+    bind:duration={voc.duration}
+    bind:currentTime={voc.currentTime}
+  />
 
-  <p>
-    Visit <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte
-    apps.
-  </p>
+  <h1>STEM!?</h1>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme">SvelteKit</a> for
-    the officially supported framework, also powered by Vite!
-  </p>
+  <div class="controls">
+    {#if loaded === "MOUNTED"}
+      <button on:click={load}>Load</button>
+    {/if}
+    <button on:click={play}>Play</button>
+    <button on:click={pause}>Pause</button>
+    <button on:click={restart}>Restart</button>
+  </div>
+
+  <div class="tracks">
+    {#if loaded === "LOADED"}
+      <div class="track">
+        <div>Instrumental</div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.2"
+          bind:value={acc.gain.gain.value}
+        />
+        <progress value={acc.currentTime} max={acc.duration} />
+      </div>
+    {/if}
+
+    {#if loaded === "LOADED"}
+      <div class="track">
+        <div>Vocals {acc.gain.gain.value}</div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.2"
+          bind:value={voc.gain.gain.value}
+        />
+        <progress value={voc.currentTime} max={voc.duration} />
+      </div>
+    {/if}
+  </div>
+
+  <div class="volume" />
 </main>
 
 <style>
@@ -41,39 +130,52 @@
   }
 
   main {
-    text-align: center;
-    padding: 1em;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
   }
 
-  img {
-    height: 16rem;
-    width: 16rem;
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5em;
   }
 
-  h1 {
-    color: #ff3e00;
-    text-transform: uppercase;
-    font-size: 4rem;
-    font-weight: 100;
-    line-height: 1.1;
-    margin: 2rem auto;
-    max-width: 14rem;
+  .controls button {
+    font-size: 1.5em;
+    padding: 0.5em 1em;
+    border-radius: 0.25em;
+    outline: none;
+    border: none;
+    color: #fafafa;
+    background-color: #333;
   }
 
-  p {
-    max-width: 14rem;
-    margin: 1rem auto;
-    line-height: 1.35;
+  .tracks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
   }
 
-  @media (min-width: 480px) {
-    h1 {
-      max-width: none;
-    }
+  .track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0em;
+    font-size: 2em;
+  }
 
-    p {
-      max-width: none;
-    }
+  .track input {
+    width: min(100%, 256px);
+  }
+
+  .track progress {
+    max-height: 24px;
+    background-color: #333;
+    border-radius: 0.25em;
   }
 </style>

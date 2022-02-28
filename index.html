@@ -4,10 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://webtiming.github.io/timingsrc/lib/timingsrc-min-v2.js" text="javascript"></script>
+    <script text="javascript" src="https://mcorp.no/lib/mediasync.js"></script>
+    <script text="javascript">
+      globalThis.TIMINGSRC = TIMINGSRC;
+      globalThis.MCorp = MCorp;
+    </script>
     <title>Svelte + TS + Vite App</title>
   </head>
   <body>
     <div id="app"></div>
+    
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
