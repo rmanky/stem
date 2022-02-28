@@ -1,134 +1,88 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { S3Client, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
 
   import accompaniment from "./assets/accompaniment.wav";
   import vocals from "./assets/vocals.wav";
 
-  let to;
-  let audioContext;
-  let loaded = "NEW";
+  type Song = { tag: string | URL; buffer: AudioBuffer; gain: GainNode };
+
+  const state = {
+    context: null as AudioContext,
+    songs: [] as Array<Song>,
+  };
+
+  const fetchSong = (url: string | URL) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = () => {
+      state.context.decodeAudioData(xhr.response, (buffer) => {
+        // create source
+        const song: Song = {
+          tag: url,
+          buffer,
+          gain: state.context.createGain(),
+        };
+        state.songs = [...state.songs, song];
+        console.log(`Retrieved ${url} buffer`);
+      });
+    };
+    xhr.send();
+  };
 
   onMount(() => {
-    loaded = "MOUNTED";
+    const client = new S3Client({
+      region: import.meta.env.AWS_REGION_STEM,
+      accessKeyId: import.meta.env.AWS_ACCESS_STEM,
+      secretAccessKey: import.meta.env.AWS_SECRET_STEM,
+    });
+
+    console.log(client);
+
+    state.context = new AudioContext();
+
+    // convert accompaniment to buffer
+    fetchSong(accompaniment);
+    fetchSong(vocals);
   });
 
-  const acc = {
-    aud: null,
-    duration: 0,
-    currentTime: 0,
-    gain: null,
+  const play = (time) => {
+    state.songs.forEach((song) => {
+      const source = state.context.createBufferSource();
+      source.buffer = song.buffer;
+      source.connect(song.gain);
+      song.gain.connect(state.context.destination);
+      source.start(time);
+    });
+    console.log("Playing tracks");
   };
 
-  const voc = {
-    aud: null,
-    duration: 0,
-    currentTime: 0,
-    gain: null,
-  };
-
-  const load = () => {
-    acc.aud.play();
-    voc.aud.play();
-
-    to = new globalThis.TIMINGSRC.TimingObject({ range: [0, 100] });
-    globalThis.MCorp.mediaSync(acc.aud, to);
-    globalThis.MCorp.mediaSync(voc.aud, to);
-
-    audioContext = new AudioContext();
-    const accSource = audioContext.createMediaElementSource(acc.aud);
-    acc.gain = audioContext.createGain();
-    const vocSource = audioContext.createMediaElementSource(voc.aud);
-    voc.gain = audioContext.createGain();
-
-    const dest = audioContext.destination;
-
-    accSource.connect(acc.gain).connect(dest);
-    vocSource.connect(voc.gain).connect(dest);
-
-    console.log("Fully Connected");
-
-    loaded = "LOADED";
-  };
-
-  const play = () => {
-    var v = to.query();
-    if (v.position === 100 && v.velocity === 0) {
-      to.update({ position: 0.0, velocity: 1.0 });
-    } else to.update({ velocity: 1.0 });
-  };
-
-  const pause = () => {
-    to.update({ velocity: 0.0 });
-  };
-
-  const restart = () => {
-    to.update({ position: 0.0 });
-  };
-
-  const setGain = (gain, e) => {
-    gain.gain.setTargetAtTime(e.target.value, audioContext.currentTime, 0.01);
+  const setSlider = (e: Event, song: Song) => {
+    const target = e.target as HTMLInputElement;
+    song.gain.gain.setTargetAtTime(
+      parseFloat(target.value),
+      state.context.currentTime,
+      0.01
+    );
   };
 </script>
 
 <main>
-  <audio
-    controls
-    src={accompaniment}
-    bind:this={acc.aud}
-    bind:duration={acc.duration}
-    bind:currentTime={acc.currentTime}
-  />
-
-  <audio
-    controls
-    src={vocals}
-    bind:this={voc.aud}
-    bind:duration={voc.duration}
-    bind:currentTime={voc.currentTime}
-  />
-
   <h1>STEM!?</h1>
 
-  <div class="controls">
-    {#if loaded === "MOUNTED"}
-      <button on:click={load}>Load</button>
-    {/if}
-    <button on:click={play}>Play</button>
-    <button on:click={pause}>Pause</button>
-    <button on:click={restart}>Restart</button>
-  </div>
+  <button on:click={() => play(0)}>Play</button>
 
-  <div class="tracks">
-    {#if loaded === "LOADED"}
-      <div class="track">
-        <div>Instrumental</div>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          on:input={(e) => setGain(acc.gain, e)}
-        />
-        <progress value={acc.currentTime} max={acc.duration} />
-      </div>
-    {/if}
-
-    {#if loaded === "LOADED"}
-      <div class="track">
-        <div>Vocals</div>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          on:input={(e) => setGain(voc.gain, e)}
-        />
-        <progress value={voc.currentTime} max={voc.duration} />
-      </div>
-    {/if}
-  </div>
-
-  <div class="volume" />
+  {#each state.songs as song}
+    <p>{song.tag}</p>
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      on:input={(e) => setSlider(e, song)}
+    />
+  {/each}
 </main>
 
 <style>
