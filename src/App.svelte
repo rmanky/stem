@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { S3Client, GetObjectCommand, S3 } from "@aws-sdk/client-s3";
+  import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
   const attack = 0.01;
   const decay = 0.1;
@@ -14,7 +14,7 @@
   };
 
   const state = {
-    keys: ["accompaniment.wav", "vocals.wav"],
+    keys: ["accompaniment.mp3", "vocals.mp3"],
     context: null as AudioContext,
     songs: [] as Array<Song>,
     soloSong: null as string | null,
