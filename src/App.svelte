@@ -5,7 +5,7 @@
   import vocals from "./assets/vocals.wav";
 
   let to;
-
+  let audioContext;
   let loaded = "NEW";
 
   onMount(() => {
@@ -34,7 +34,7 @@
     globalThis.MCorp.mediaSync(acc.aud, to);
     globalThis.MCorp.mediaSync(voc.aud, to);
 
-    const audioContext = new AudioContext();
+    audioContext = new AudioContext();
     const accSource = audioContext.createMediaElementSource(acc.aud);
     acc.gain = audioContext.createGain();
     const vocSource = audioContext.createMediaElementSource(voc.aud);
@@ -63,6 +63,10 @@
 
   const restart = () => {
     to.update({ position: 0.0 });
+  };
+
+  const setGain = (gain, e) => {
+    gain.gain.setTargetAtTime(e.target.value, audioContext.currentTime, 0.01);
   };
 </script>
 
@@ -102,8 +106,8 @@
           type="range"
           min="0"
           max="1"
-          step="0.2"
-          bind:value={acc.gain.gain.value}
+          step="0.05"
+          on:input={(e) => setGain(acc.gain, e)}
         />
         <progress value={acc.currentTime} max={acc.duration} />
       </div>
@@ -116,8 +120,8 @@
           type="range"
           min="0"
           max="1"
-          step="0.2"
-          bind:value={voc.gain.gain.value}
+          step="0.05"
+          on:input={(e) => setGain(voc.gain, e)}
         />
         <progress value={voc.currentTime} max={voc.duration} />
       </div>
