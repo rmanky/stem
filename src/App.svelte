@@ -27,7 +27,13 @@
   };
 
   const load = () => {
+    acc.aud.play();
+    voc.aud.play();
+
     to = new globalThis.TIMINGSRC.TimingObject({ range: [0, 100] });
+    globalThis.MCorp.mediaSync(acc.aud, to);
+    globalThis.MCorp.mediaSync(voc.aud, to);
+
     const audioContext = new AudioContext();
     const accSource = audioContext.createMediaElementSource(acc.aud);
     acc.gain = audioContext.createGain();
@@ -41,8 +47,6 @@
 
     console.log("Fully Connected");
 
-    globalThis.MCorp.mediaSync(acc.aud, to);
-    globalThis.MCorp.mediaSync(voc.aud, to);
     loaded = "LOADED";
   };
 
@@ -64,7 +68,7 @@
 
 <main>
   <audio
-    hidden
+    controls
     src={accompaniment}
     bind:this={acc.aud}
     bind:duration={acc.duration}
@@ -72,7 +76,7 @@
   />
 
   <audio
-    hidden
+    controls
     src={vocals}
     bind:this={voc.aud}
     bind:duration={voc.duration}
@@ -107,7 +111,7 @@
 
     {#if loaded === "LOADED"}
       <div class="track">
-        <div>Vocals {acc.gain.gain.value}</div>
+        <div>Vocals</div>
         <input
           type="range"
           min="0"
