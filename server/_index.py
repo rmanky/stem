@@ -25,40 +25,40 @@ except ClientError as e:
   print(e)
 
 
-# class handler(BaseHTTPRequestHandler):
-#     def do_GET(self):
-#         print('GET request received')
-#         # send response
-#         self.send_response(200)
-#         # regular text
-#         self.send_header('Content-Type', 'text/plain')
-#         self.end_headers()
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        print('GET request received')
+        # send response
+        self.send_response(200)
+        # regular text
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
 
-#         # spleeter
-#         waveform, _ = audio_adapter.load(join('data','example.wav'), sample_rate=rate)
-#         prediction = seperator.separate(waveform)
+        # spleeter
+        waveform, _ = audio_adapter.load(join('data','example.wav'), sample_rate=rate)
+        prediction = seperator.separate(waveform)
 
-#         print('Spleeter prediction created')
+        print('Spleeter prediction created')
 
-#         bytes_wav = bytes()
-#         byte_io = BytesIO(bytes_wav)
+        bytes_wav = bytes()
+        byte_io = BytesIO(bytes_wav)
 
-#         vocals = prediction['vocals']
-#         wavfile.write(byte_io, rate, vocals)
-#         data = byte_io.getvalue()
+        vocals = prediction['vocals']
+        wavfile.write(byte_io, rate, vocals)
+        data = byte_io.getvalue()
 
-#         s3.put_object(Bucket=os.environ['AWS_BUCKET_STEM'], Key='vocals.wav', Body=data, ContentType='audio/wav')
+        s3.put_object(Bucket=os.environ['AWS_BUCKET_STEM'], Key='vocals.wav', Body=data, ContentType='audio/wav')
 
-#         print('Wrote vocals to S3')
+        print('Wrote vocals to S3')
 
-#         accompaniment = prediction['accompaniment']
-#         wavfile.write(byte_io, rate, accompaniment)
-#         data = byte_io.getvalue()
+        accompaniment = prediction['accompaniment']
+        wavfile.write(byte_io, rate, accompaniment)
+        data = byte_io.getvalue()
 
-#         s3.put_object(Bucket=os.environ['AWS_BUCKET_STEM'], Key='accompaniment.wav', Body=data, ContentType='audio/wav')
+        s3.put_object(Bucket=os.environ['AWS_BUCKET_STEM'], Key='accompaniment.wav', Body=data, ContentType='audio/wav')
 
-#         print('Wrote accompaniment to S3')
+        print('Wrote accompaniment to S3')
 
-#         # send buffer to client
-#         self.wfile.write('Done, waiting on S3...'.encode('utf-8'))
-#         return
+        # send buffer to client
+        self.wfile.write('Done, waiting on S3...'.encode('utf-8'))
+        return

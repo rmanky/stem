@@ -13,6 +13,9 @@ lerna-debug.log*
 # Python stuff
 venv/
 
+# FFMPEg
+ffmpeg.tar.xz
+
 node_modules
 dist
 dist-ssr
